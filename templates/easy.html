@@ -1,0 +1,208 @@
+{% extends 'layout.html' %}
+
+{% block main %}
+<div class="grid">
+    
+</div>
+<p hidden id="inputStr" name="inputStr"></p>
+<button type="button" onclick="check()">Check</button>
+<button type="button" onclick="display_grid()">Reveal</button>
+<button type="button" onclick="page_refresh()">New Puzzle</button>
+<p id="retStr" hidden>{{ retStr }}</p>
+<p id="solveStr" hidden>{{ solveStr }}</p>
+<p id="boldStr" hidden>{{ boldStr }}</p>
+<p id="revealed" hidden></p>
+{% endblock %}
+
+{% block script %}
+  <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const grid = document.querySelector(".grid");
+
+            for (let i = 0; i < 9; i++) {
+                for (let j = 0; j < 9; j++) {
+                const cell = document.createElement("div");
+                cell.classList.add("cell");
+                if ((j + 1) % 3 === 0 && j !== 8) {
+                    cell.classList.add("cell-right")
+                }
+                if ((i + 1) % 3 === 0 && i !== 8) {
+                    cell.classList.add('cell-down')
+                }
+                cell.id = String(i) + '-' + String(j)
+                cell.contentEditable = true;
+                cell.addEventListener("input", validateInput);
+                grid.appendChild(cell);
+                cell.addEventListener('keydown', function(event) {
+                    const key = event.key
+                    if (key === "Backspace") {
+                        cell.innerHTML = ""
+                        cell.classList.remove('cell-wrong')
+                        check_wrongs(cell.id, -1)
+                    }
+                })
+                }
+            }
+            copy_str()
+            });
+            function copy_str() {
+                var retStrElement = document.getElementById('retStr');
+                var retStr = retStrElement.innerText;
+                var boldStrElement = document.getElementById('boldStr');
+                var boldStr = boldStrElement.innerText;
+                const revealed = document.getElementById('revealed')
+                if (retStr !== "") {
+                    for (let i = 0; i < retStr.length; i++) {
+                        console.log(retStr[i])
+                        if (retStr[i] === '0')
+                        {
+                            console.log('hi')
+                        }
+                        else {
+                            xCord = Math.floor(i / 9)
+                            yCord = i % 9
+                            const cell = document.getElementById(xCord + '-' + yCord)
+                            if (boldStr[i] === retStr[i]) {
+                                cell.contentEditable = false;
+                                cell.classList.add('cell-bold')
+                            }
+                            cell.innerHTML = retStr[i]
+                            
+                        }
+                    }
+                }
+            }
+            function clear_grid() {
+                retStr = ""
+                for (let i = 0; i < 81; i++) {
+                    xCord = Math.floor(i / 9)
+                    yCord = i % 9
+                    const cell = document.getElementById(xCord + '-' + yCord)
+                    cell.innerHTML = ""
+                    cell.classList.remove('cell-bold')
+                }
+            }
+            function validateInput(event) {
+                var input = event.target.innerText;
+                if (input.length > 1) {
+                    input = input.slice(0, 1);
+                }
+                const numericInput = input.replace(/[^1-9]/g, '');
+                event.target.innerText = numericInput;
+                const id = event.target.id
+                console.log(id)
+                check_wrongs(id, numericInput)
+            }
+            function check_wrongs(id, number) {
+                const cell = document.getElementById(id)
+                let xidx = parseInt(id.slice(0, 1))
+                let yidx = parseInt(id.slice(2, 3))
+                for (let i = 0; i < 9; i++) {
+                    if (i !== yidx) {
+                        var check_cell = document.getElementById(String(xidx) + '-' + String(i))
+                        var text = check_cell.innerText
+                        console.log(text)
+                        if (number === text) {
+                            cell.classList.add('cell-wrong')
+                            if (!check_cell.classList.contains('cell-bold')) {
+                                console.log(check_cell.id)
+                                check_cell.classList.add('cell-wrong')
+                            }
+                        }
+                        else {
+                            check_cell.classList.remove('cell-wrong')
+                        }
+                    }
+                }
+                for (let i = 0; i < 9; i++) {
+                    if (i !== xidx) {
+                        var check_cell = document.getElementById(String(i) + '-' + String(yidx))
+                        var text = check_cell.innerText
+                        if (number === text) {
+                            cell.classList.add('cell-wrong')
+                            if (!check_cell.classList.contains('cell-bold')) {
+                                check_cell.classList.add('cell-wrong')
+                            }
+                        }
+                    }
+                }
+                let row_index = Math.floor(xidx / 3) * 3;
+                let col_index = Math.floor(yidx / 3) * 3;
+                for (let i = 0; i < 3; i++) {
+                    for (let j = 0; j < 3; j++) {
+                        var check_cell = document.getElementById(String(i + row_index) + '-' + String(j + col_index));
+                        if (check_cell.id !== cell.id) {
+                            var text = check_cell.innerText;
+                            if (number === text) {
+                                cell.classList.add('cell-wrong');
+                                if (!check_cell.classList.contains('cell-bold')) {
+                                    check_cell.classList.add('cell-wrong');
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            function display_grid() {
+                var retStrElement = document.getElementById('solveStr');
+                var retStr = retStrElement.innerText;
+                var boldStrElement = document.getElementById('boldStr');
+                var boldStr = boldStrElement.innerText;
+                if (retStr !== "") {
+                    for (let i = 0; i < retStr.length; i++) {
+                        xCord = Math.floor(i / 9)
+                        yCord = i % 9
+                        const cell = document.getElementById(xCord + '-' + yCord)
+                        if (boldStr[i] === retStr[i]) {
+                            cell.classList.add('cell-bold')
+                        }
+                        if (cell.innerHTML.length === 0) {
+                            if (!cell.classList.contains('cell-bold')) {
+                                cell.classList.add('cell-revealed')
+                            }
+                        }
+                        else if (cell.innerHTML.length > 0 && cell.innerHTML != retStr[i]) {
+                            cell.classList.add('cell-revealed-wrong')
+                        }
+                        cell.innerHTML = retStr[i]
+                        
+                    }
+                }
+            }
+            function get_str() {
+                inputStr = document.getElementById('inputStr');
+                var retStrElement = document.getElementById('retStr');
+                inputStr.value = '';
+                for (let i = 0; i < 9; i++) {
+                    for (let j = 0; j < 9; j++) {
+                        const cell = document.getElementById(String(i) + '-' + String(j));
+                        text = cell.innerHTML;
+                        if (text === '') {
+                            inputStr.value += '0'
+                        }
+                        else {
+                            inputStr.value += text;
+                        }
+                    }
+                }
+                inputStr.innerText = inputStr.value;
+                console.log(inputStr.value);
+            }
+            function check() {
+                get_str()
+                inputStr = document.getElementById('inputStr')
+                solveStr = document.getElementById('solveStr')
+                console.log(inputStr.innerHTML)
+                console.log(solveStr.innerHTML)
+                if (inputStr.innerHTML === solveStr.innerHTML) {
+                    alert("Solved! Correct")
+                }
+                else {
+                    alert("Try Again")
+                }
+            }
+            function page_refresh() {
+                location.reload()
+            }
+  </script>
+{% endblock %}

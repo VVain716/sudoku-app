@@ -1,0 +1,104 @@
+{% extends 'layout.html' %}
+
+{% block main %}
+<form action="/" method="post">
+    <div class="grid">
+       
+    </div>
+    <input type="text" hidden id="inputStr" name="inputStr">
+    <button type="submit" onclick="get_str()">Submit</button>
+    <button type="button" onclick="clear_grid()">Clear</button>
+    <p id="retStr" hidden>{{ retStr }}</p>
+    <p id="boldStr" hidden>{{ boldStr }}</p>
+</form>
+{% endblock %}
+
+{% block script %}
+  <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const grid = document.querySelector(".grid");
+
+            for (let i = 0; i < 9; i++) {
+                for (let j = 0; j < 9; j++) {
+                const cell = document.createElement("div");
+                cell.classList.add("cell");
+                if ((j + 1) % 3 === 0 && j !== 8) {
+                    cell.classList.add("cell-right")
+                }
+                if ((i + 1) % 3 === 0 && i !== 8) {
+                    cell.classList.add('cell-down')
+                } 
+                cell.id = String(i) + '-' + String(j)
+                cell.contentEditable = true;
+                cell.addEventListener("input", validateInput);
+                cell.addEventListener('keydown', function(event) {
+                    const key = event.key
+                    if (key === "Backspace") {
+                        cell.innerHTML = ""
+                        cell.classList.remove('cell-wrong')
+                    }
+                })
+                grid.appendChild(cell);
+                }
+            }
+            copy_str()
+            });
+            
+            function copy_str() {
+                var retStrElement = document.getElementById('retStr');
+                var retStr = retStrElement.innerText;
+                var boldStrElement = document.getElementById('boldStr');
+                var boldStr = boldStrElement.innerText;
+                if (retStr !== "") {
+                    for (let i = 0; i < retStr.length; i++) {
+                        xCord = Math.floor(i / 9)
+                        yCord = i % 9
+                        const cell = document.getElementById(xCord + '-' + yCord)
+                        if (boldStr[i] === retStr[i]) {
+                            console.log('hi')
+                            cell.classList.add('cell-bold')
+                        }
+                        cell.innerHTML = retStr[i]
+                    }
+                }
+            }
+            function clear_grid() {
+                retStr = ""
+                for (let i = 0; i < 81; i++) {
+                    xCord = Math.floor(i / 9)
+                    yCord = i % 9
+                    const cell = document.getElementById(xCord + '-' + yCord)
+                    cell.innerHTML = ""
+                    cell.classList.remove('cell-bold')
+                }
+            }
+            function validateInput(event) {
+                var input = event.target.innerText;
+                if (input.length > 1) {
+                    input = input.slice(0, 1);
+                }
+                const numericInput = input.replace(/[^1-9]/g, '');
+                event.target.innerText = numericInput;
+            }
+            function get_str() {
+                inputStr = document.getElementById('inputStr');
+                var retStrElement = document.getElementById('retStr');
+                inputStr.value = '';
+                for (let i = 0; i < 9; i++) {
+                    for (let j = 0; j < 9; j++) {
+                        const cell = document.getElementById(String(i) + '-' + String(j));
+                        text = cell.innerHTML;
+                        if (text === '') {
+                            inputStr.value += '0'
+                        }
+                        else {
+                            inputStr.value += text;
+                        }
+                    }
+                }
+                retStrElement.innerText = inputStr.value;
+                console.log(inputStr.value);
+            }
+        
+  </script>
+{% endblock %}
